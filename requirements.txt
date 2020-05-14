@@ -1,0 +1,3 @@
+bitstruct==8.9.0
+hpbandster==0.7.4
+ConfigSpace @ git+https://github.com/automl/ConfigSpace.git@41597b5926d7ac43b673bb3b293471b86b64a75e
