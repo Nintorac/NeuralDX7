@@ -11,7 +11,7 @@ __version__ = Path('version').read_text().strip()
 
 setup(
     name='neuralDX7',
-    packages = ['neuralDX7'],
+    packages = find_packages(),
     license='MIT',
     version=__version__,
     author='Nintorac',
