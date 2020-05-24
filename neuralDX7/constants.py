@@ -346,6 +346,7 @@ class DX7Single():
 
 
         return mido.Message('sysex', data=data)
+        
 
 def consume_syx(path):
 

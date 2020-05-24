@@ -5,6 +5,13 @@ import torch
 from torch import nn
 from neuralDX7.models.stochastic_nodes import NormalNode
 
+"""
+This code modified from the reference implementation provided by the authors
+https://github.com/riannevdberg/sylvester-flows
+"""
+
+
+
 class TriangularSylvester(nn.Module):
     """
     Sylvester normalizing flow with Q=P or Q=I.
