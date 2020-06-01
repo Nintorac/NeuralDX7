@@ -19,9 +19,9 @@ Big thanks to Bobby Blues for collecting [these](http://bobbyblues.recup.ch/yama
 
 
 
-# thisdx7cartdoesnotexit.com
+# thisdx7cartdoesnotexist.com
 
-If you've found your way here through thisdx7cartdoesnotexit.com then this section will give an overview of how that site generates patches.
+If you've found your way here through [thisdx7cartdoesnotexist.com](https://www.thisdx7cartdoesnotexist.com/) then this section will give an overview of how that site generates patches.
 
 
 The model itself is defined under `NeuralDX7/models/dx7_vae.py`, it is a simple VAE with triangular sylvester flows implemented with attention layers over the parameters of the DX7. 
