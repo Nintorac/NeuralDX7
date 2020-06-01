@@ -43,3 +43,28 @@ Finally the training script itself, as well as various other scripts used to per
 `live.py` - uses jackd to provide a realtime interface to the model. This is really fun to play with as it lets you hook up a midi controller to control the latent variables of the model and update the parameters of your FM Synthesizer in real time. 
 
 To use it you will need jackd installed, add both your controller and FM synthsizer to the jack graph, update the names of the controller and fm synth in the `live.py` script and then run. Each of the first 8 midi cc controls recieved will be mapped to a latent dimension of the model.
+
+
+```
+import torch
+import mido
+from agoge import InferenceWorker
+from neuralDX7.utils import dx7_bulk_pack
+
+# load model (weights should download automatically)
+model = InferenceWorker('hasty-copper-dogfish', 'dx7-vae', with_data=False).model
+
+# sample latent from prior N(0,1)
+z = torch.randn(32, 8)
+
+# decode samples to logits
+p_x = model.generate(z)
+
+# sample
+sample = p_x.logits.argmax(-1)
+
+# convert pytorch tensors to syx
+msg = dx7_bulk_pack(sample.numpy().tolist())
+
+mido.write_syx_file('path/to/save.syx', [msg])
+```
