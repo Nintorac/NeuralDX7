@@ -9,12 +9,14 @@ from neuralDX7.models.stochastic_nodes import TriangularSylvesterFlow
 from neuralDX7.constants import MAX_VALUE, N_PARAMS
 from neuralDX7.utils import mask_parameters
 
-
+PARAMETER_MASK = mask_parameters(torch.ones(155, 128))==0
 class DX7VAE(AbstractModel):
 
     def __init__(self, features, latent_dim, encoder, decoder, deterministic_path_drop_rate=0.5,  num_flows=3):
         
         super().__init__()
+
+        self.PARAMETER_MASK = PARAMETER_MASK
 
         self.embedder = nn.Embedding(MAX_VALUE, features)
         self.encoder = ResidualAttentionEncoder(**encoder)
@@ -30,18 +32,19 @@ class DX7VAE(AbstractModel):
         self.drop = nn.Dropout(deterministic_path_drop_rate)
         self.n_features = features
 
+    @torch.jit.ignore
     def latent_encoder(self,  X, A, z=None, mean=False):
 
         encoder, q_x = self._latent_encoder
 
         return q_x(encoder(X, A).mean(-2), z)
 
-
+    @torch.jit.ignore
     def forward(self, X):
 
         batch_size = X.shape[0]
 
-        A = torch.ones_like(X).bool()
+        A = torch.ones_like(X)==1
         A = A[...,None] | A[...,None,:]
 
         X_emb = self.embedder(X)
@@ -59,11 +62,11 @@ class DX7VAE(AbstractModel):
             'flow': flow,
         }
 
-
+    @torch.jit.ignore
     @torch.no_grad()
     def features(self, X):
         # pass
-        A = torch.ones_like(X).bool()
+        A = torch.ones_like(X)==1
         A = A[...,None] | A[...,None,:]
         # eye = torch.eye(A.shape[-1]).bool().to(self.device) & (~X_a.unsqueeze(-2))
         # A = A | eye
@@ -74,19 +77,19 @@ class DX7VAE(AbstractModel):
         return q.q_z
 
     @torch.no_grad()
-    def generate(self, z, t=1.):
+    def generate(self, z, t=torch.ones(1)):
         
-        
-        A = z.new(z.size(0), 155, 155).bool() | 1
-        X = z.new(z.size(0), 155, self.n_features)
+        A = torch.ones(z.size(0), 155, 155) == 1
+        X = torch.ones(z.size(0), 155, self.n_features)
         X = X * 0 + 1
 
         c = self.z_to_c(z).view(z.shape[0], 155, -1)
         X_dec = self.decoder(X, A, c)
-        X_hat = mask_parameters(self.logits(X_dec))
-        X_hat = torch.distributions.Categorical(logits=X_hat/t)
+        X_hat = self.logits(X_dec)
+        X_hat = X_hat.masked_fill(self.PARAMETER_MASK, -1e9)
+        # X_hat = torch.distributions.Categorical(logits=X_hat/t)
 
-        return X_hat
+        return X_hat/t
 
     # @torch.no_grad()
     # def generate(self, X, X_a, sample=True, t=1.):

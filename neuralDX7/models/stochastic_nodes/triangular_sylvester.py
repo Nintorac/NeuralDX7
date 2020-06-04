@@ -33,6 +33,7 @@ class TriangularSylvester(nn.Module):
     def der_tanh(self, x):
         return 1 - self.h(x) ** 2
 
+    @torch.jit.ignore
     def forward(self, zk, r1, r2, b, permute_z=None, sum_ldj=True):
         """
         All flow parameters are amortized. conditions on diagonals of R1 and R2 need to be satisfied
@@ -142,6 +143,7 @@ class TriangularSylvesterFlow(nn.Module):
 
         return r1, r2, b
 
+    @torch.jit.ignore
     def forward(self, h, z=None, flow=True):
         """
         Forward pass with orthogonal flows for the transformation z_0 -> z_1 -> ... -> z_k.

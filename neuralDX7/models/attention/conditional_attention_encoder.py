@@ -29,10 +29,10 @@ class CondtionalResidualAttentionEncoder(AbstractModel):
 
 
     def forward(self, X, A, c):
-        encodings = self.p2x(self.positional_encoding).chunk(2, -1)
+        gamma_p, beta_p = self.p2x(self.positional_encoding).chunk(2, -1)
         
-        fs = f_gamma, f_beta = torch.sigmoid, torch.tanh
-        gamma_p, beta_p = map(lambda f, x: f(x), fs, encodings)
+        gamma_p = torch.sigmoid(gamma_p)
+        beta_p = torch.tanh(beta_p)
         # gamma = torch.sigmoid(gamma)
         # beta = torch.tanh(beta)
 
@@ -40,9 +40,9 @@ class CondtionalResidualAttentionEncoder(AbstractModel):
 
         for layer, c_layer in zip(self.layers, self.c_layers):
 
-            conditioning = c_layer(c).chunk(2, -1)
-            gamma_c, beta_c = map(lambda f, x: f(x), fs, conditioning)
-
+            gamma_c, beta_c = c_layer(c).chunk(2, -1)
+            gamma_c = torch.sigmoid(gamma_c)
+            beta_c = torch.tanh(beta_c)
             X = layer(gamma_c * X + beta_c, A)
 
         return X

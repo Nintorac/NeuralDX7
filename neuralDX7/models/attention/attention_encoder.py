@@ -25,9 +25,10 @@ class ResidualAttentionEncoder(AbstractModel):
 
 
     def forward(self, X, A):
-        fs = f_gamma, f_beta = torch.sigmoid, torch.tanh
-        encodings = self.p2x(self.positional_encoding).chunk(2, -1)
-        gamma, beta = map(lambda f, x: f(x), fs, encodings)
+        gamma, beta = self.p2x(self.positional_encoding).chunk(2, -1)
+        gamma = torch.sigmoid(gamma)
+        beta = torch.tanh(beta)
+        # beta = map(lambda f, x: f(x), fs, encodings)
         # gamma = torch.sigmoid(gamma)
         # beta = torch.tanh(beta)
 

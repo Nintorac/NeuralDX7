@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 from torch.distributions import Normal
 
@@ -18,7 +19,8 @@ class NormalNode(nn.Module):
             nn.Linear(hidden_dim, latent_dim * 2)
         )
 
-    def forward(self, x, *args, **kwargs):
+    @torch.jit.ignore
+    def forward(self, x):
 
 
         mu, sigma = self.net(x).chunk(2, -1)
