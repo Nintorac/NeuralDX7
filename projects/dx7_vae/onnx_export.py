@@ -58,10 +58,11 @@ class Model(torch.nn.Module):
 
 
 model = Model()
-# model(torch.rand(1, 8), 1.)
 sm = torch.jit.script(model)
+# sm.save('Model.jit')
+torch.jit.save(sm, 'Model.jit')
 
-# Export the model
+# Export the modelsp
 # torch_out = torch.onnx._export(
 #             model,             # model being run
 #             (torch.ones(1, 8)*0.5, torch.ones(1)),                       # model input (or a tuple for multiple inputs)
