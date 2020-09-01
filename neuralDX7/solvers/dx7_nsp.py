@@ -9,6 +9,9 @@ from agoge import AbstractSolver
 from .utils import sigmoidal_annealing
 
 class DX7NeuralSylvesterProcess(AbstractSolver):
+    """
+    EXPERIMENTAL AND UNTESTED
+    """
  
     def __init__(self, model,
         Optim=AdamW, optim_opts=dict(lr= 1e-4),

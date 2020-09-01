@@ -11,8 +11,20 @@ from neuralDX7.utils import mask_parameters
 
 
 class DX7VAE(AbstractModel):
+    """
+    Variational Auto Encoder for a single DX7 patch. 
+    
+    Uses a Triangular sylvester flow to transform the encoder output to decoder input
+    """
 
-    def __init__(self, features, latent_dim, encoder, decoder, deterministic_path_drop_rate=0.5,  num_flows=3):
+    def __init__(self, features, latent_dim, encoder, decoder, num_flows=3):
+        """
+        features - number of features in the model
+        latent_dim - the latent dimension of the model
+        encoder - dictionary containing instantiation parameters for ResidualAttentionEncoder module
+        decoder - dictionary containing instantiation parameters for CondtionalResidualAttentionEncoder module
+        num_flows - the number of flows for the TriangularSylvesterFlow module
+        """
         
         super().__init__()
 
@@ -26,18 +38,29 @@ class DX7VAE(AbstractModel):
         self.decoder = CondtionalResidualAttentionEncoder(**decoder)
         self.logits = FeedForwardGELU(features, MAX_VALUE)
 
-
-        self.drop = nn.Dropout(deterministic_path_drop_rate)
         self.n_features = features
 
     def latent_encoder(self,  X, A, z=None, mean=False):
+        """
+        Calculate the latent distribution
 
+        X - data tensor, torch.FloatTensor(batch_size, 155, features)
+        A - connection mask, torch.BoolTensor(batch_size, 155, features)
+        z - a presampled latent, if none then the z is sampled using reparameterization technique
+        mean - use the mean rather than sampling from the latent
+        """
+        
         encoder, q_x = self._latent_encoder
 
         return q_x(encoder(X, A).mean(-2), z)
 
 
     def forward(self, X):
+        """
+        Auto encodes the inputs variational latent layer
+
+        X - the array of dx7 voices, torch.LongTensor(batch_size, 155)
+        """
 
         batch_size = X.shape[0]
 
@@ -49,7 +72,6 @@ class DX7VAE(AbstractModel):
         flow = self.latent_encoder(X_emb, A)
         
         c = self.z_to_c(flow.z_k).view(batch_size, 155, -1)
-        # c = z.unsqueeze(-2)
 
         X_dec = self.decoder(torch.ones_like(X_emb), A, c)
         X_hat = self.logits(X_dec)
@@ -62,11 +84,15 @@ class DX7VAE(AbstractModel):
 
     @torch.no_grad()
     def features(self, X):
-        # pass
+        """
+        Get the latent distributions for a set of voices
+
+        X - the array of dx7 voices, torch.LongTensor(batch_size, 155)
+
+        """
+
         A = torch.ones_like(X).bool()
         A = A[...,None] | A[...,None,:]
-        # eye = torch.eye(A.shape[-1]).bool().to(self.device) & (~X_a.unsqueeze(-2))
-        # A = A | eye
 
         X = self.embedder(X)
         q = self.latent_encoder(X, A)
@@ -75,8 +101,12 @@ class DX7VAE(AbstractModel):
 
     @torch.no_grad()
     def generate(self, z, t=1.):
+        """
+        Given a sample from the latent distribution, reporojects it back to data space
         
-        
+        z - the array of dx7 voices, torch.FloatTensor(batch_size, latent_dim)
+        t - the temperature of the output distribution. approaches determenistic as t->0 and approach uniforms as t->infty, requires t>0
+        """
         A = z.new(z.size(0), 155, 155).bool() | 1
         X = z.new(z.size(0), 155, self.n_features)
         X = X * 0 + 1
@@ -87,26 +117,6 @@ class DX7VAE(AbstractModel):
         X_hat = torch.distributions.Categorical(logits=X_hat/t)
 
         return X_hat
-
-    # @torch.no_grad()
-    # def generate(self, X, X_a, sample=True, t=1.):
-
-    #     q = self.features(X, X_a)
-
-        
-
-    #     z = q.sample()
-
-    #     c_gamma, c_beta = self.z_to_c(z).chunk(2, -1)
-
-
-    #     X_hat = mask_parameters(self.logits(c_gamma))
-
-    #     X_hat = torch.distributions.Categorical(logits=X_hat/t)
-
-    #     return X_hat
-
-
 
 if __name__=='__main__':
 

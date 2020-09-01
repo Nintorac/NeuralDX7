@@ -28,17 +28,22 @@ class Attention(nn.Module):
 
         *input_shape, _ = X.shape
 
-
+        # calculate the query key and value vectors for all data points
         QKV = self.QKV(X).reshape(*input_shape, -1, 3, self.n_heads)
+
+        # permute the heads and qkv vectors to the first dimensions
         n_dims = len(QKV.shape)
         permuter = torch.arange(n_dims).roll(2)
         Q, K, V = QKV.permute(*permuter)
 
+        # calculate the attention values
         qk_t = (Q @ K.transpose(-1, -2)) / (self.n_heads**(1/2))
         qk_t_masked =  qk_t.masked_fill(~A, -self.inf)
         
+        # apply the attention values to the values
         Y = qk_t_masked.softmax(-1) @ V
 
+        # restore heads to the final dimension and flatten (effectively concatenating them)
         n_dims = len(Y.shape)
         permuter = torch.arange(n_dims).roll(-1)
         Y = Y.permute(*permuter).flatten(-2, -1)

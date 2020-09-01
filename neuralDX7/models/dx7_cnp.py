@@ -8,6 +8,11 @@ from neuralDX7.utils import mask_parameters
 
 
 class DX7PatchProcess(AbstractModel):
+    """
+    EXPERIMENTAL AND UNTESTED
+
+    
+    """
 
     def __init__(self, features, encoder):
         

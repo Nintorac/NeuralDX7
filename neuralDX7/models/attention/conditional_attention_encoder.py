@@ -11,7 +11,18 @@ from neuralDX7.models.utils import position_encoding_init
 
 
 class CondtionalResidualAttentionEncoder(AbstractModel):
+    """
+    Very similar to attention encoder but also allows custom side conditioning capacity
+
+    """
     def __init__(self, features, c_features, attention_layer, max_len=200, n_layers=3):
+        """
+        features - the number of features per parameter
+        c_features - the number of side conditioning features per batch item
+        attention_layer - a dictionary containing instantiation parameters for the AttentionLayer module
+        max_len - the maximum needed size of the positional encodings
+        n_layers - number of layers for the module to use
+        """
         super().__init__()
 
 
@@ -29,19 +40,21 @@ class CondtionalResidualAttentionEncoder(AbstractModel):
 
 
     def forward(self, X, A, c):
-        encodings = self.p2x(self.positional_encoding).chunk(2, -1)
-        
-        fs = f_gamma, f_beta = torch.sigmoid, torch.tanh
-        gamma_p, beta_p = map(lambda f, x: f(x), fs, encodings)
-        # gamma = torch.sigmoid(gamma)
-        # beta = torch.tanh(beta)
+        """
+        X - data tensor, torch.FloatTensor(batch_size, num_parameters, features)
+        A - connection mask, torch.BoolTensor(batch_size, num_parameters, features)
+        """
+
+        # generate FiLM parameters from positional encodings for conditioning
+        gamma_p, beta_p = self.p2x(self.positional_encoding).chunk(2, -1)
+        gamma_p, beta_p = torch.sigmoid(gamma_p), torch.tanh(beta_p)
 
         X = gamma_p * X + beta_p
 
         for layer, c_layer in zip(self.layers, self.c_layers):
 
-            conditioning = c_layer(c).chunk(2, -1)
-            gamma_c, beta_c = map(lambda f, x: f(x), fs, conditioning)
+            gamma_c, beta_c = c_layer(c).chunk(2, -1)
+            gamma_c, beta_c = torch.sigmoid(gamma_c), torch.tanh(beta_c)
 
             X = layer(gamma_c * X + beta_c, A)
 

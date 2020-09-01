@@ -8,6 +8,9 @@ from agoge import AbstractSolver
 
 
 class DX7PatchProcess(AbstractSolver):
+    """
+    EXPERIMENTAL AND UNTESTED
+    """
 
     def __init__(self, model,
         Optim=AdamW, optim_opts=dict(lr= 1e-4),

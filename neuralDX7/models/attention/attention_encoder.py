@@ -10,27 +10,43 @@ from neuralDX7.models.utils import position_encoding_init
 
 
 class ResidualAttentionEncoder(AbstractModel):
+    """
+    Residual attention stacks based on the Attention Is All You Need paper
+    """
+
     def __init__(self, features, attention_layer, max_len=200, n_layers=3):
+        """
+        features - the number of features per parameter
+        c_features - the number of side conditioning features per batch item
+        attention_layer - a dictionary containing instantiation parameters for the AttentionLayer module
+        max_len - the maximum needed size of the positional encodings
+        n_layers - number of layers for the module to use
+        """
         super().__init__()
 
-
+        # create the layers
         self.layers = nn.ModuleList(
             map(lambda x: AttentionLayer(**attention_layer), range(n_layers))
         )
 
+        # pre generate the positional encodings
         positional_encoding = position_encoding_init(max_len, features)
+        self.register_buffer('positional_encoding', positional_encoding)
 
         self.p2x = nn.Linear(features, features * 2)
-        self.register_buffer('positional_encoding', positional_encoding)
 
 
     def forward(self, X, A):
-        fs = f_gamma, f_beta = torch.sigmoid, torch.tanh
-        encodings = self.p2x(self.positional_encoding).chunk(2, -1)
-        gamma, beta = map(lambda f, x: f(x), fs, encodings)
-        # gamma = torch.sigmoid(gamma)
-        # beta = torch.tanh(beta)
+        """
+        X - data tensor, torch.FloatTensor(batch_size, num_parameters, features)
+        A - connection mask, torch.BoolTensor(batch_size, num_parameters, features)
+        """
 
+        # generate FiLM parameters from positional encodings for conditioning
+        gamma, beta = self.p2x(self.positional_encoding).chunk(2, -1)
+        gamma, beta = torch.sigmoid(gamma), torch.tanh(beta)
+
+        # Apply the data through the layers adding the positioning information in at each layer
         for layer in self.layers:
             X = layer(gamma * X + beta, A)
 

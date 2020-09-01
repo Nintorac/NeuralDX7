@@ -17,6 +17,43 @@ format [found here](https://github.com/asb2m10/dexed/tree/master/Documentation
 
 Big thanks to Bobby Blues for collecting [these](http://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html) DX7 patches. This was the only data source
 
+# Directory structure
+```
+neuralDX7/
+├── constants.py
+├── datasets                    # modules to interface with preprocessed datasets 
+│   ├── dx7_sysex_dataset.py
+│   └── __init__.py
+├── __init__.py
+├── models
+│   ├── attention               # modules implementing transformer stack based on Attention Is All You Need
+│   │   ├── attention_encoder.py
+│   │   ├── attention_layer.py
+│   │   ├── attention.py
+│   │   ├── conditional_attention_encoder.py
+│   │   └── __init__.py
+│   ├── general
+│   │   ├── gelu_ff.py          # two layer non linear layer using GeLU non-linearity 
+│   │   └── __init__.py
+│   ├── __init__.py
+│   ├── stochastic_nodes        # layers implementing stochastic transformations
+│   │   ├── __init__.py
+│   │   ├── normal.py
+│   │   └── triangular_sylvester.py
+│   ├── dx7_cnp.py              # experimental modules
+│   ├── dx7_np.py               # experimental modules
+│   ├── dx7_nsp.py              # experimental modules
+│   ├── dx7_vae.py              # working model used in production of thisdx7cartdoesnotexist.com
+│   └── utils.py
+├── solvers
+│   ├── dx7_np.py               # experimental modules
+│   ├── dx7_nsp.py              # experimental modules
+│   ├── dx7_patch_process.py    # experimental modules
+│   ├── dx7_vae.py              # working model used in production of thisdx7cartdoesnotexist.com
+│   ├── __init__.py
+│   └── utils.py
+└── utils.py
+```
 
 
 # thisdx7cartdoesnotexist.com

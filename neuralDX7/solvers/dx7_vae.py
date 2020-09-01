@@ -9,7 +9,10 @@ from agoge import AbstractSolver
 from .utils import sigmoidal_annealing
 
 class DX7VAE(AbstractSolver):
- 
+    """
+    Solver used to train DX7VAE model
+    """
+
     def __init__(self, model,
         Optim=AdamW, optim_opts=dict(lr= 1e-4),
         max_beta=0.5,
@@ -27,7 +30,15 @@ class DX7VAE(AbstractSolver):
         self.beta_temp = beta_temp
 
     def loss(self, X, X_hat, flow):
+        """
+        Computes the VAE loss objective and collects some training statistics
 
+        X - data tensor, torch.LongTensor(batch_size, num_parameters=155)
+        X_hat - data tensor, torch.FloatTensor(batch_size, num_parameters=155, max_value=128)
+        flow - the namedtuple returned by TriangularSylvesterFlow
+        
+        for reference, the namedtuple is ('Flow', ('q_z', 'log_det', 'z_0', 'z_k', 'flow'))
+        """
     
         p_z_k = Normal(0,1).log_prob(flow.z_k).sum(-1)
         q_z_0 = flow.q_z.log_prob(flow.z_0).sum(-1)
@@ -50,9 +61,13 @@ class DX7VAE(AbstractSolver):
             'q_z_0': q_z_0.mean(),
             # 'iter': self.iter // self.
         }
-        
 
     def solve(self, X, **kwargs):
+        """
+        Take a gradient step given an input X
+
+        X - data tensor, torch.LongTensor(batch_size, num_parameters=155)
+        """
         
         Y = self.model(**X)
         loss, L = self.loss(**X, **Y)
@@ -68,11 +83,9 @@ class DX7VAE(AbstractSolver):
 
         return L
 
-    
     def step(self):
 
         pass
-
 
     def state_dict(self):
         

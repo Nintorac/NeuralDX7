@@ -11,6 +11,10 @@ from neuralDX7.utils import mask_parameters
 
 
 class DX7NeuralProcess(AbstractModel):
+    """
+    EXPERIMENTAL AND UNTESTED
+
+    """
 
     def __init__(self, features, latent_dim, encoder, decoder, deterministic_path_drop_rate=0.5):
         

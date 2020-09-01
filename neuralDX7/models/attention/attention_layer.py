@@ -6,7 +6,10 @@ from neuralDX7.models.attention import Attention
 
 
 class AttentionLayer(nn.Module):
+    """
+    Layer based on the original Attention is All You Need paper and is usable in graph network setups
 
+    """
 
     def __init__(self, features, hidden_dim, attention):
         """
@@ -25,12 +28,15 @@ class AttentionLayer(nn.Module):
         )
 
         self.attention_norm = nn.LayerNorm(features)
-        self.feedforward_norm = nn.LayerNorm(features, elementwise_affine=False)
+        self.feedforward_norm = nn.LayerNorm(features, elementwise_affine=False) # save elementwise affine for film conditioning
 
     
 
     def forward(self, X, A):
-
+        """
+        X - data tensor, torch.FloatTensor(batch_size, num_parameters, features)
+        A - connection mask, torch.BoolTensor(batch_size, num_parameters, features)
+        """
         X = self.attention_norm(self.attention(X, A) + X)
         X = self.feedforward_norm(self.feedforward(X) + X)
 
