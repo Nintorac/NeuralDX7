@@ -152,8 +152,8 @@ class TriangularSylvesterFlow(nn.Module):
         q_z = self.q_z(h)
         z_0 = z_k = q_z.rsample() if z is None else z
 
-        if not flow:
-            return Flow(q_z, None, z_0, None)
+        if len(self.flows) == 0:
+            return Flow(q_z, torch.zeros(1), z_0, z_0, lambda x: x)
 
         r1, r2, b = self.flow_params(h)
 
